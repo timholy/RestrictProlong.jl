@@ -211,6 +211,5 @@ function checkdims(out, A, dim)
 end
 
 _size(A::AbstractArray) = map(length, indices(A))
-_size(A) = size(A)
 
 end # module

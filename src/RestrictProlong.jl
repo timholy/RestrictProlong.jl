@@ -1,12 +1,10 @@
 module RestrictProlong
 
 using Base: tail
-using AxisArrays
 
 export restrict, restrict!, prolong
 
 typealias DimsLike Union{Dims,AbstractVector{Int}}
-typealias Axes Tuple{Axis,Vararg{Axis}}
 
 ### restrict, for reducing the image size by 2-fold
 
@@ -53,50 +51,6 @@ prolong{T,N}(A::AbstractArray{T,N}, sz::Dims{N}) = _prolong(A, sz, ntuple(identi
 
 @inline _prolong(A, sz, dims) = _prolong(prolong(A, sz[1], dims[1]), tail(sz), tail(dims))
 _prolong(A, ::Tuple{}, ::Tuple{}) = A
-
-## AxisArray-specific implementation
-
-restrict(A::AxisArray) = _restrict(A, axes(A)...)
-
-restrict(A::AxisArray, dims::DimsLike) = _restrict(A, axes(A)[[dims...]]...)
-
-restrict(A::AxisArray, axs::Axes) = _restrict(A, axs...)
-
-# We only allow one axis specified as a type, because a tuple-of-types
-# isn't type-stable.
-restrict{Ax<:Axis}(A::AxisArray, ::Type{Ax}) = _restrict(A, A[Ax])
-
-function _restrict(A::AxisArray, ax::Axis)
-    A = _restrict(A.data, axisdim(A, ax))
-    AxisArray(A, replace_axis(restrict_axis(ax), axes(A)))
-end
-
-@inline replace_axis(newax, axs) = _replace_axis(newax, axnametype(newax), axs...)
-
-@inline _replace_axis{Ax}(newax, ::Type{Ax}, ax::Ax, axs...) =
-    (newax, _replace_axis(newax, Ax, axs...)...)
-@inline _replace_axis{Ax}(newax, ::Type{Ax}, ax, axs...) =
-    (ax, _replace_axis(newax, Ax, axs...)...)
-_replace_axis{Ax}(newax, ::Type{Ax}) = ()
-
-axnametype{name}(ax::Axis{name}) = Axis{name}
-
-restrict_axis(ax, inregion::Bool) = inregion ? restrict_axis(ax) : ax
-
-function restrict_axis(ax)
-    v = ax.val
-    veven = v[1]-step(v)/2 : 2*step(v) : v[end]+step(v)/2
-    return ax(isodd(length(v)) ? oftype(veven, v[1:2:end]) : veven)
-end
-
-prolong{Ax}(A::AxisArray, ::Type{Ax}, sz::Integer) = prolong(A, A[Ax], sz)
-prolong
-
-function prolong_axis(ax, n)
-    v = ax.val
-    return ax(isodd(n) ? (v[1] : step(v)/2 : v[end]) :
-                         (v[1]-step(v)/4 : step(v)/2 : v[end]+step(v)/4))
-end
 
 ### Inner routines
 
@@ -257,6 +211,5 @@ function checkdims(out, A, dim)
 end
 
 _size(A::AbstractArray) = map(length, indices(A))
-_size(A) = size(A)
 
 end # module

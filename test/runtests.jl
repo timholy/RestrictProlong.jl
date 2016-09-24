@@ -35,6 +35,7 @@ using Base.Test
                     @test restrict(x.*y', 1) ≈ X.*y'
                     @test restrict(x.*y', 2) ≈ x.*Y'
                     @test restrict(x.*y', [1,3]) ≈ X.*y'
+                    @test restrict(x.*y', ()) == x.*y'
                 end
             end
         end

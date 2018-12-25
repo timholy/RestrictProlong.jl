@@ -1,5 +1,4 @@
-using RestrictProlong
-using Base.Test
+using RestrictProlong, Test
 
 @testset "restrict" begin
     oddset =  (([1,0,0,0,0], [0.5,0,0]),

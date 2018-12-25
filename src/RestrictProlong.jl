@@ -4,7 +4,7 @@ using Base: tail
 
 export restrict, restrict!, prolong
 
-typealias DimsLike Union{Dims,AbstractVector{Int}}
+const DimsLike = Union{Dims,AbstractVector{Int}}
 
 ### restrict, for reducing the image size by 2-fold
 
@@ -47,20 +47,20 @@ prolong(A::AbstractArray) = prolong(A, map(n->2*n-1, _size(A)))
 
 prolong(A::AbstractVector, sz::Integer) = prolong(A, sz, 1)
 
-prolong{T,N}(A::AbstractArray{T,N}, sz::Dims{N}) = _prolong(A, sz, ntuple(identity, Val{N}))
+prolong(A::AbstractArray{T, N}, sz::Dims{N}) where {T, N} = _prolong(A, sz, ntuple(identity, Val(N)))
 
 @inline _prolong(A, sz, dims) = _prolong(prolong(A, sz[1], dims[1]), tail(sz), tail(dims))
 _prolong(A, ::Tuple{}, ::Tuple{}) = A
 
 ### Inner routines
 
-function _restrict{T,N}(A::AbstractArray{T,N}, dim::Integer)
-    indsA = indices(A)
+function _restrict(A::AbstractArray{T, N}, dim::Integer) where {T, N}
+    indsA = axes(A)
     sz = dim <= N ? length(indsA[dim]) : 1
     if sz <= 2
         return copy(A)
     end
-    newinds = ntuple(i->i==dim? oftype(indsA[i], Base.OneTo(restrict_size(sz))) : indsA[i], Val{N})
+    newinds = ntuple(i -> i==dim ? oftype(indsA[i], Base.OneTo(restrict_size(sz))) : indsA[i], Val(N))
     A1 = first(A)
     out = similar(A, typeof(A1/4+A1/2), newinds)
     restrict!(out, A, dim)
@@ -72,14 +72,14 @@ end
 
 function restrict!(out, A, dim)
     checkdims(out, A, dim)
-    indsA = indices(A)
-    Rpre = CartesianRange(indsA[1:dim-1])
-    Rpost = CartesianRange(indsA[dim+1:end])
-    _restrict!(out, indices(out, dim), A, Rpre, indsA[dim], Rpost)
+    indsA = axes(A)
+    Rpre = CartesianIndices(indsA[1:dim-1])
+    Rpost = CartesianIndices(indsA[dim+1:end])
+    _restrict!(out, axes(out, dim), A, Rpre, indsA[dim], Rpost)
 end
 
 # Normalized so that out has roughly the same mean as A
-@noinline function _restrict!{T}(out::AbstractArray{T}, indout, A, Rpre::CartesianRange, indA, Rpost::CartesianRange)
+@noinline function _restrict!(out::AbstractArray{T}, indout, A, Rpre::CartesianIndices, indA, Rpost::CartesianIndices) where T
     l = length(indA)
     fill!(out, zero(T))
     if isodd(l)
@@ -130,23 +130,23 @@ end
 Perform expansion to size `sz` along dimension `dim`. `sz` must be one
 of the valid choices for prolongation size.
 """
-function prolong{T,N}(A::AbstractArray{T,N}, sz::Integer, dim::Integer)
+function prolong(A::AbstractArray{T, N}, sz::Integer, dim::Integer) where {T, N}
     if dim > N
         sz == 1 || throw(DimensionMismatch("cannot prolong $N-dimensional array to size $sz along dimension $dim (size must be 1)"))
         return copy(A)
     end
-    indsA = indices(A)
+    indsA = axes(A)
     l = dim <= ndims(A) ? length(indsA[dim]) : 1
     (sz == l) | (sz == 2*l-1) | (sz == 2*l) || throw(DimensionMismatch("along dimension $dim, sz must be one of $l, $(2*l-1), or $(2*l), got $sz"))
-    newinds = ntuple(i->i==dim? oftype(indsA[i], Base.OneTo(sz)) : indsA[i], Val{N})
+    newinds = ntuple(i -> i==dim ? oftype(indsA[i], Base.OneTo(sz)) : indsA[i], Val(N))
     A1 = first(A)
     out = similar(A, typeof(A1/2+A1/2), newinds)
-    Rpre = CartesianRange(indsA[1:dim-1])
-    Rpost = CartesianRange(indsA[dim+1:end])
+    Rpre = CartesianIndices(indsA[1:dim-1])
+    Rpost = CartesianIndices(indsA[dim+1:end])
     _prolong!(out, newinds[dim], A, Rpre, indsA[dim], Rpost)
 end
 
-@noinline function _prolong!{T}(out::AbstractArray{T}, indout, A, Rpre::CartesianRange, indA, Rpost::CartesianRange)
+@noinline function _prolong!(out::AbstractArray{T}, indout, A, Rpre::CartesianIndices, indA, Rpost::CartesianIndices) where T
     l = length(indout)
     fill!(out, zero(T))
     if isodd(l)
@@ -197,19 +197,19 @@ restrict_size(len::Integer) = (len+1)>>1
 function checkdims(out, A, dim)
     1 <= dim <= ndims(A) || throw(DimensionMismatch("dim must be between 1 and $(ndims(A)), got $dim"))
     ndims(out) == ndims(A) || throw(DimensionMismatch("A and out must have the same dimensions, got $(ndims(A)) and $(ndims(out))"))
-    indsA = indices(A)
-    indsout = indices(out)
+    indsA = axes(A)
+    indsout = axes(out)
     for i = 1:ndims(A)
         if i != dim
-            indsout[i] == indsA[i] || throw(DimensionMismatch("A and out must have the same indices for all non-reduced dimensions, got $(indsA[i]) and $(indsout[i]) for dimension $i"))
+            indsout[i] == indsA[i] || throw(DimensionMismatch("A and out must have the same axces for all non-reduced dimensions, got $(indsA[i]) and $(indsout[i]) for dimension $i"))
         end
     end
     indAr = indsA[dim]
     indout = indsout[dim]
-    length(indout) == restrict_size(length(indAr)) || throw(DimensionMismatch("A and out disagree along the restricted dimension, have indices $indAr and $indout but latter must be of length $(length(indout))"))
+    length(indout) == restrict_size(length(indAr)) || throw(DimensionMismatch("A and out disagree along the restricted dimension, have axes $indAr and $indout but latter must be of length $(length(indout))"))
     nothing
 end
 
-_size(A::AbstractArray) = map(length, indices(A))
+_size(A::AbstractArray) = map(length, axes(A))
 
 end # module

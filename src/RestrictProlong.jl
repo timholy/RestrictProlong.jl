@@ -90,13 +90,13 @@ end
         for Ipost in Rpost
             for (i,j) in zip(rngA, rngout)
                 @inbounds for Ipre in Rpre
-                    tmp = quarter*A[Ipre,i+1,Ipost]
-                    out[Ipre,j,Ipost]   += half*A[Ipre,i,Ipost] + tmp
-                    out[Ipre,j+1,Ipost] += tmp
+                    tmp = quarter*A[Ipre, i+1, Ipost]
+                    out[Ipre, j, Ipost]   += half*A[Ipre, i, Ipost] + tmp
+                    out[Ipre, j+1, Ipost] += tmp
                 end
             end
             @inbounds for Ipre in Rpre
-                out[Ipre,last(indout),Ipost] += half*A[Ipre,last(indA),Ipost]
+                out[Ipre, last(indout), Ipost] += half*A[Ipre, last(indA), Ipost]
             end
         end
     else
@@ -107,17 +107,17 @@ end
         rngout = first(indout):last(indout)-1
         for Ipost in Rpost
             @inbounds for Ipre in Rpre
-                out[Ipre,first(indout),Ipost] = half*A[Ipre,first(indA),Ipost]
+                out[Ipre, first(indout), Ipost] = half*A[Ipre, first(indA), Ipost]
             end
             @inbounds for (i,j) in zip(rngA, rngout)
                 for Ipre in Rpre
-                    tmpA1, tmpA2 = A[Ipre,i,Ipost], A[Ipre,i+1,Ipost]
-                    out[Ipre,j,Ipost]   += threeeighths*tmpA1 + oneeighth*tmpA2
-                    out[Ipre,j+1,Ipost] += oneeighth*tmpA1 + threeeighths*tmpA2
+                    tmpA1, tmpA2 = A[Ipre, i, Ipost], A[Ipre, i+1, Ipost]
+                    out[Ipre, j, Ipost]   += threeeighths*tmpA1 + oneeighth*tmpA2
+                    out[Ipre, j+1, Ipost] += oneeighth*tmpA1 + threeeighths*tmpA2
                 end
             end
             @inbounds for Ipre in Rpre
-                out[Ipre,last(indout),Ipost] += half*A[Ipre,last(indA),Ipost]
+                out[Ipre, last(indout), Ipost] += half*A[Ipre, last(indA), Ipost]
             end
         end
     end
@@ -157,14 +157,14 @@ end
             i = first(indA)
             for j in rngout
                 @inbounds for Ipre in Rpre
-                    tmpA1, tmpA2 = A[Ipre,i,Ipost], A[Ipre,i+1,Ipost]
-                    out[Ipre,j,Ipost]   = half*tmpA1
-                    out[Ipre,j+1,Ipost] = quarter*tmpA1+quarter*tmpA2
+                    tmpA1, tmpA2 = A[Ipre, i, Ipost], A[Ipre, i+1, Ipost]
+                    out[Ipre, j, Ipost]   = half*tmpA1
+                    out[Ipre, j+1, Ipost] = quarter*tmpA1+quarter*tmpA2
                 end
                 i += 1
             end
             @inbounds for Ipre in Rpre
-                out[Ipre,last(indout),Ipost] = half*A[Ipre,last(indA),Ipost]
+                out[Ipre, last(indout), Ipost] = half*A[Ipre, last(indA), Ipost]
             end
         end
     else
@@ -175,17 +175,17 @@ end
         rngA = first(indA):last(indA)-1
         for Ipost in Rpost
             @inbounds for Ipre in Rpre
-                out[Ipre,first(indout),Ipost] = half*A[Ipre,first(indA),Ipost]
+                out[Ipre, first(indout), Ipost] = half*A[Ipre, first(indA), Ipost]
             end
             @inbounds for (i,j) in zip(rngA, rngout)
                 for Ipre in Rpre
-                    tmpA1, tmpA2 = A[Ipre,i,Ipost], A[Ipre,i+1,Ipost]
-                    out[Ipre,j,Ipost]   = threeeighths*tmpA1 + oneeighth*tmpA2
-                    out[Ipre,j+1,Ipost] = oneeighth*tmpA1 + threeeighths*tmpA2
+                    tmpA1, tmpA2 = A[Ipre, i, Ipost], A[Ipre, i+1, Ipost]
+                    out[Ipre, j, Ipost]   = threeeighths*tmpA1 + oneeighth*tmpA2
+                    out[Ipre, j+1, Ipost] = oneeighth*tmpA1 + threeeighths*tmpA2
                 end
             end
             @inbounds for Ipre in Rpre
-                out[Ipre,last(indout),Ipost] = half*A[Ipre,last(indA),Ipost]
+                out[Ipre, last(indout), Ipost] = half*A[Ipre, last(indA), Ipost]
             end
         end
     end

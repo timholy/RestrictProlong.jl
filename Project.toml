@@ -1,5 +1,6 @@
 name = "RestrictProlong"
 uuid = "b2097dc8-3ef6-5718-ab14-7bca60434373"
+version = "0.2.0"
 
 [compat]
 julia = "0.7, 1"
